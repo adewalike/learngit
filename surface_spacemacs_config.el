@@ -722,3 +722,309 @@ This function is called at the very end of Spacemacs initialization."
  ;; If there is more than one, they won't work right.
  )
 )
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
+
+;; Place your private configuration here! Remember, you do not need to run 'doom
+;; sync' after modifying this file!
+
+
+;; Some functionality uses this to identify you, e.g. GPG configuration, email
+;; clients, file templates and snippets.
+(setq user-full-name "Dylan Yin"
+      user-mail-address "mrdylanyin@gmail.com")
+(setq url-proxy-services
+          '(("http"  . "127.0.0.1:1087")
+          ("https" . "127.0.0.1:1087")))
+;; (use-package! org-bullets)
+;; (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+
+;; TODO: Mode this to another section
+(setq-default fill-column 80)
+
+;; Turn on indentation and auto-fill mode for Org files
+(defun dw/org-mode-setup ()
+  (org-indent-mode)
+  (variable-pitch-mode 1)
+  (auto-fill-mode 0)
+  (visual-line-mode 1)
+  (setq evil-auto-indent nil)
+  ;; (diminish org-indent-mode)
+  )
+
+(use-package org
+  :defer t
+  :hook (org-mode . dw/org-mode-setup)
+  :config
+  ;; 让中文也可以不加空格就使用行内格式
+  (setcar (nthcdr 0 org-emphasis-regexp-components) " \t('\"{[:nonascii:]")
+  (setcar (nthcdr 1 org-emphasis-regexp-components) "- \t.,:!?;'\")}\\[[:nonascii:]")
+  (org-set-emph-re 'org-emphasis-regexp-components org-emphasis-regexp-components)
+  (org-element-update-syntax)
+  (setq org-ellipsis " ▾"
+        org-hide-emphasis-markers t
+        org-src-fontify-natively t
+        org-fontify-quote-and-verse-blocks t
+        org-src-tab-acts-natively t
+        org-edit-src-content-indentation 2
+        org-hide-block-startup nil
+        org-src-preserve-indentation nil
+        org-startup-folded 'content
+        org-cycle-separator-lines 2)
+
+  (setq org-modules
+    '(org-crypt
+        org-habit
+        org-bookmark
+        org-eshell
+        org-irc))
+
+  (setq org-refile-targets '((nil :maxlevel . 1)
+                             (org-agenda-files :maxlevel . 1)))
+
+  (setq org-outline-path-complete-in-steps nil)
+  (setq org-refile-use-outline-path t)
+
+  (evil-define-key '(normal insert visual) org-mode-map (kbd "C-j") 'org-next-visible-heading)
+  (evil-define-key '(normal insert visual) org-mode-map (kbd "C-k") 'org-previous-visible-heading)
+
+  (evil-define-key '(normal insert visual) org-mode-map (kbd "M-j") 'org-metadown)
+  (evil-define-key '(normal insert visual) org-mode-map (kbd "M-k") 'org-metaup)
+
+  (org-babel-do-load-languages
+    'org-babel-load-languages
+    '((emacs-lisp . t)
+      (ledger . t)))
+
+  (push '("conf-unix" . conf-unix) org-src-lang-modes)
+
+  ;; NOTE: Subsequent sections are still part of this use-package block!
+
+
+(use-package org-superstar
+  :after org
+  :hook (org-mode . org-superstar-mode)
+  :custom
+  (org-superstar-remove-leading-stars t)
+  (org-superstar-headline-bullets-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+;; Replace list hyphen with dot
+;; (font-lock-add-keywords 'org-mode
+;;                         '(("^ *\\([-]\\) "
+;;                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+;; Increase the size of various headings
+;; (set-face-attribute 'org-document-title nil :font "Iosevka Aile" :weight 'bold :height 1.3)
+(dolist (face '((org-level-1 . 1.2)
+                (org-level-2 . 1.1)
+                (org-level-3 . 1.05)
+                (org-level-4 . 1.0)
+                (org-level-5 . 1.1)
+                (org-level-6 . 1.1)
+                (org-level-7 . 1.1)
+                (org-level-8 . 1.1)))
+  ;; (set-face-attribute (car face) nil :font "Iosevka Aile" :weight 'medium :height (cdr face))
+  )
+
+;; Make sure org-indent face is available
+(require 'org-indent)
+
+;; Ensure that anything that should be fixed-pitch in Org files appears that way
+(set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+(set-face-attribute 'org-table nil  :inherit 'fixed-pitch)
+(set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+(set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+(set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
+(set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+(set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+(set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+(set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
+
+;; Get rid of the background on column views
+(set-face-attribute 'org-column nil :background nil)
+(set-face-attribute 'org-column-title nil :background nil)
+
+;; TODO: Others to consider
+;; '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+;; '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+;; '(org-property-value ((t (:inherit fixed-pitch))) t)
+;; '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+;; '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
+;; '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+;; '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))
+)
+
+
+(defun kdm/html2org-clipboard ()
+  "Convert clipboard contents from HTML to Org and then paste (yank)."
+  (interactive)
+  (kill-new (shell-command-to-string "osascript -e 'the clipboard as \"HTML\"' | perl -ne 'print chr foreach unpack(\"C*\",pack(\"H*\",substr($_,11,-3)))' | pandoc -f html -t json | pandoc -f json -t org | sed 's/ / /g'"))
+  (yank))
+;; https://github.com/nsf/gocode/issues/261#issuecomment-66524463
+(when (memq window-system '(mac ns))
+  (exec-path-from-shell-initialize))
+;; (exec-path-from-shell-copy-env "GOPATH")
+;; Enabling only some features
+;; (setq dap-auto-configure-features '(sessions locals controls tooltip))
+(defun efs/lsp-mode-setup ()
+  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+  (lsp-headerline-breadcrumb-mode))
+
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :hook (lsp-mode . efs/lsp-mode-setup)
+  :init
+  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+  :config
+  (lsp-enable-which-key-integration t))
+(use-package company
+  :after lsp-mode
+  :hook (lsp-mode . company-mode)
+  :bind (:map company-active-map
+         ("<tab>" . company-complete-selection))
+        (:map lsp-mode-map
+         ("<tab>" . company-indent-or-complete-common))
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0))
+
+(use-package company-box
+  :hook (company-mode . company-box-mode))
+
+;; DAP
+(use-package dap-mode
+        ;;:custom
+        ;;(dap-go-debug-program `("node" "~/extension/out/src/debugAdapter/goDebug.js"))
+        :config
+        (dap-mode 1)
+        (setq dap-print-io t)
+
+        ;;(setq window-resize-pixelwise t)
+        (require 'dap-hydra)
+        (require 'dap-go)		; download and expand vscode-go-extenstion to the =~/.extensions/go=
+        (dap-go-setup)
+        (use-package! dap-ui
+                :ensure nil
+                :config
+                (dap-ui-mode 1)
+        )
+  )
+(require 'lsp-mode)
+(add-hook 'go-mode-hook #'lsp-deferred)
+(add-hook 'dap-stopped-hook
+          (lambda (arg) (call-interactively #'dap-hydra)))
+;; (use-package python-mode
+;;         :ensure t
+;;         :hook (python-mode . lsp-deferred)
+;;         :custom
+;;         ;; NOTE: Set these if Python 3 is called "python3" on your system!
+;;         (python-shell-interpreter "python3")
+;;         (dap-python-executable "python3")
+;;         (dap-python-debugger 'debugpy)
+;;         :config
+;;         (require 'dap-python)
+;;         )
+
+
+;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
+;; are the three important ones:
+;;
+;; + `doom-font'
+;; + `doom-variable-pitch-font'
+;; + `doom-big-font' -- used for `doom-big-font-mode'; use this for
+;;   presentations or streaming.
+;;
+;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
+;; font string. You generally only need these two:
+;; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
+;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
+
+;; There are two ways to load a theme. Both assume the theme is installed and
+;; available. You can either set `doom-theme' or manually load a theme with the
+;; `load-theme' function. This is the default:
+(setq doom-theme 'doom-moonlight)
+
+
+
+
+;; If you use `org' and don't want your org files in the default location below,
+;; change `org-directory'. It must be set before org loads!
+(setq org-directory "/Users/dylanyin/Nutstore_Files/我的坚果云/Emacs/ORG")
+(setq org-agenda-files (list "/Users/dylanyin/Nutstore_Files/我的坚果云/Emacs/ORG/agenda"
+                        ;; "/Users/dylanyin/Nutstore_Files/我的坚果云/Emacs/ORG/org_learn"
+                        ))
+(setq org-default-notes-file  "/Users/dylanyin/Nutstore_Files/我的坚果云/Emacs/ORG/agenda/Capture_surface.org")
+;; Remove empty LOGBOOK drawers on clock out
+(defun bh/remove-empty-drawer-on-clock-out ()
+   (interactive)
+   (save-excursion
+     (beginning-of-line 0)
+     (org-remove-empty-drawer-at (point))))
+(add-hook 'org-clock-out-hook 'bh/remove-empty-drawer-on-clock-out 'append)
+(setq org-capture-templates
+(quote (
+        ("t" "todo" entry (file "/Users/dylanyin/Nutstore_Files/我的坚果云/Emacs/ORG/agenda/Capture_surface.org")
+        "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
+        ;; ("r" "respond" entry (file "~/git/org/refile.org")
+        ;;  "* NEXT Respond to %:from on %:subject\nSCHEDULED: %t\n%U\n%a\n" :clock-in t :clock-resume t :immediate-finish t)
+        ("n" "note" entry (file "/Users/dylanyin/Nutstore_Files/我的坚果云/Emacs/ORG/agenda/Capture_note.org")
+        "* %? :NOTE:\n%U\n%a\n" :clock-in t :clock-resume t)
+        ("j" "Journal" entry (file+datetree "/Users/dylanyin/Nutstore_Files/我的坚果云/Emacs/ORG/agenda/diary.org")
+        "* %?\n%U\n" :clock-in t :clock-resume t)
+        ;; ("w" "org-protocol" entry (file "~/git/org/refile.org")
+        ;;  "* TODO Review %c\n%U\n" :immediate-finish t)
+        ;; ("m" "Meeting" entry (file "~/git/org/refile.org")
+        ;;  "* MEETING with %? :MEETING:\n%U" :clock-in t :clock-resume t)
+        ;; ("p" "Phone call" entry (file "~/git/org/refile.org")
+        ;;  "* PHONE %? :PHONE:\n%U" :clock-in t :clock-resume t)
+        ;; ("h" "Habit" entry (file "~/git/org/refile.org")
+        ;;  "* NEXT %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n")
+        )))
+  (setq org-latex-compiler "xelatex"
+        ;;org-latex-listings 'minted
+        org-latex-packages-alist '(("" "ctex"))
+        ;; org-latex-packages-alist '(("" "minted"))
+        ;; org-latex-pdf-default-class "ctexart"
+        org-latex-pdf-process
+        '("xelatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+          "xelatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+          "xelatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+;;https://www.reddit.com/r/emacs/comments/gshn9c/doom_emacs_as_a_pdf_viewer/
+(use-package! pdf-view
+  :hook (pdf-tools-enabled . pdf-view-midnight-minor-mode)
+  :hook (pdf-tools-enabled . hide-mode-line-mode)
+  :config
+  (setq pdf-view-midnight-colors '("#ABB2BF" . "#282C35")))
+;; 放大预览倍数
+(setq org-preview-latex-default-process 'dvisvgm)
+;; https://github.com/politza/pdf-tools/issues/51#issuecomment-544049068
+(setq pdf-view-use-scaling t)
+;; (setq org-latex-create-formula-image-program 'dvisvgm)
+
+;; This determines the style of line numbers in effect. If set to `nil', line
+;; numbers are disabled. For relative line numbers, set this to `relative'.
+(setq display-line-numbers-type t)
+
+
+;; Here are some additional functions/macros that could help you configure Doom:
+;;
+;; - `load!' for loading external *.el files relative to this one
+;; - `use-package!' for configuring packages
+;; - `after!' for running code after a package has loaded
+;; - `add-load-path!' for adding directories to the `load-path', relative to
+;;   this file. Emacs searches the `load-path' when you load packages with
+;;   `require' or `use-package'.
+;; - `map!' for binding new keys
+;;
+;; To get information about any of these functions/macros, move the cursor over
+;; the highlighted symbol at press 'K' (non-evil users must press 'C-c c k').
+;; This will open documentation for it, including demos of how they are used.
+;;
+;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
+;; they are implemented.
